@@ -96,10 +96,16 @@ public class BubbleGameView extends View {
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+
+        radius = w / 26f;
+        gap = radius * 0.10f;
+
         shooterX = w / 2f;
-        shooterY = h - 180;
+        shooterY = h * 0.86f;
+
         ballX = shooterX;
         ballY = shooterY;
+
         createBubbles();
     }
 
@@ -118,7 +124,11 @@ public class BubbleGameView extends View {
     }
 
     private float[] getCellPosition(int r, int c) {
-        float startY = radius + 105;
+
+        float scoreTop = radius * 3.2f;
+        float scoreBoxHeight = radius * 2.2f;
+
+        float startY = scoreTop + scoreBoxHeight + radius * 1.4f;
 
         float cellW = radius * 2 + gap;
         float totalWidth = cols * cellW - gap + radius;
@@ -178,48 +188,64 @@ public class BubbleGameView extends View {
 
     private void drawScore(Canvas canvas) {
 
-        paint.setStyle(Paint.Style.FILL);
+        float top = radius * 3.2f;
+        float boxHeight = radius * 2.2f;
 
-        // Score Box
-        paint.setColor(Color.rgb(30, 28, 55));
-        RectF scoreBox = new RectF(15, 45, 395, 95);
-        canvas.drawRoundRect(scoreBox, 18, 18, paint);
+        float margin = radius * 0.45f;
 
-        paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(4);
-        paint.setColor(Color.rgb(160, 90, 255));
-        canvas.drawRoundRect(scoreBox, 18, 18, paint);
+        float scoreLeft = margin;
+        float scoreRight = getWidth() * 0.48f;
 
-        // Level Box
+        float levelLeft = getWidth() * 0.52f;
+        float levelRight = getWidth() - margin;
+
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(30, 28, 55));
-        RectF levelBox = new RectF(455, 45, 680, 95);
+
+        RectF scoreBox = new RectF(scoreLeft, top, scoreRight, top + boxHeight);
+        canvas.drawRoundRect(scoreBox, 18, 18, paint);
+
+        RectF levelBox = new RectF(levelLeft, top, levelRight, top + boxHeight);
         canvas.drawRoundRect(levelBox, 18, 18, paint);
 
         paint.setStyle(Paint.Style.STROKE);
-        paint.setStrokeWidth(4);
+        paint.setStrokeWidth(radius * 0.14f);
         paint.setColor(Color.rgb(160, 90, 255));
+
+        canvas.drawRoundRect(scoreBox, 18, 18, paint);
         canvas.drawRoundRect(levelBox, 18, 18, paint);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setFakeBoldText(true);
-        paint.setTextSize(28);
+        paint.setTextSize(radius * 0.78f);
 
-        // Score Title
+        float textY = top + boxHeight * 0.66f;
+
         paint.setColor(Color.WHITE);
-        canvas.drawText("SCORE:", 28, 78, paint);
+        canvas.drawText("SCORE: ", scoreLeft + radius * 0.45f, textY, paint);
 
-        // Score Value
+        float scoreLabelWidth = paint.measureText("SCORE: ");
+
         paint.setColor(Color.YELLOW);
-        canvas.drawText(String.valueOf(score), 165, 78, paint);
+        canvas.drawText(
+                String.valueOf(score),
+                scoreLeft + radius * 0.45f + scoreLabelWidth,
+                textY,
+                paint
+        );
 
-        // Level Title
         paint.setColor(Color.WHITE);
-        canvas.drawText("LEVEL:", 470, 78, paint);
+        canvas.drawText("LEVEL: ", levelLeft + radius * 0.45f, textY, paint);
 
-        // Level Value
+        float levelLabelWidth = paint.measureText("LEVEL: ");
+
         paint.setColor(Color.YELLOW);
-        canvas.drawText(String.valueOf(level), 595, 78, paint);
+        canvas.drawText(
+                String.valueOf(level),
+                levelLeft + radius * 0.45f + levelLabelWidth,
+                textY,
+                paint
+        );
 
         paint.setFakeBoldText(false);
     }
@@ -292,12 +318,22 @@ public class BubbleGameView extends View {
         drawBubble(canvas, ballX, ballY, currentColor);
     }
     private void drawNextBubble(Canvas canvas) {
-        float boxX = shooterX + 55;
-        float boxY = shooterY - 20;
+
+        float boxW = radius * 2.8f;
+        float boxH = radius * 3.2f;
+
+        float boxX = shooterX + radius * 2.2f;
+        float boxY = shooterY - radius * 2.2f;
+
+        // ডান পাশে চলে গেলে ভিতরে রাখবে
+        if (boxX + boxW > getWidth() - 10) {
+            boxX = getWidth() - boxW - 10;
+        }
+
+        RectF nextBox = new RectF(boxX, boxY, boxX + boxW, boxY + boxH);
 
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(Color.rgb(30, 28, 55));
-        RectF nextBox = new RectF(boxX, boxY, boxX + 85, boxY + 95);
         canvas.drawRoundRect(nextBox, 18, 18, paint);
 
         paint.setStyle(Paint.Style.STROKE);
@@ -307,11 +343,11 @@ public class BubbleGameView extends View {
 
         paint.setStyle(Paint.Style.FILL);
         paint.setFakeBoldText(true);
-        paint.setTextSize(22);
+        paint.setTextSize(getWidth() / 34f);
         paint.setColor(Color.WHITE);
-        canvas.drawText("NEXT", boxX + 12, boxY + 30, paint);
+        canvas.drawText("NEXT", boxX + boxW * 0.18f, boxY + boxH * 0.32f, paint);
 
-        drawBubble(canvas, boxX + 42, boxY + 65, nextColor);
+        drawBubble(canvas, boxX + boxW / 2f, boxY + boxH * 0.72f, nextColor);
 
         paint.setFakeBoldText(false);
     }
@@ -348,10 +384,11 @@ public class BubbleGameView extends View {
         float touchX = event.getX();
         float touchY = event.getY();
 
-        float nextBoxX = shooterX + 55;
-        float nextBoxY = shooterY - 20;
-        float nextBoxW = 85;
-        float nextBoxH = 95;
+        float nextBoxW = radius * 2.8f;
+        float nextBoxH = radius * 3.2f;
+
+        float nextBoxX = shooterX + radius * 2.2f;
+        float nextBoxY = shooterY - radius * 2.2f;
 
         if (event.getAction() == MotionEvent.ACTION_UP
                 && canSwap
